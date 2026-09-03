@@ -1,0 +1,20 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
+
+# R session cruft
+.Rhistory
+.RData
+
+# Local Claude Code instructions - kept out of the public repo
+CLAUDE.md
+
+# Data - raw and cleaned CSVs are regenerable from the pipeline.
+# Keep small hand-checked samples in data/samples/ if we ever add them.
+data/*.csv
+!data/samples/*.csv
