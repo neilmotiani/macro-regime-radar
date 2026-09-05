@@ -4,6 +4,11 @@ __pycache__/
 *.pyc
 .ipynb_checkpoints/
 
+# Auto-generated tooling directories with symlinks pointing into venv/ -
+# broken on any other machine, don't track them.
+.agents/
+.claude/
+
 # OS
 .DS_Store
 
@@ -11,7 +16,7 @@ __pycache__/
 .Rhistory
 .RData
 
-# Local Claude Code instructions - kept out of the public repo
+# Local project notes - not part of the public repo
 CLAUDE.md
 
 # Data - raw and cleaned CSVs are regenerable from the pipeline.
