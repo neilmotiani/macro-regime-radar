@@ -165,12 +165,14 @@ def fit_regimes(X: np.ndarray) -> np.ndarray:
     return model.fit_predict(X)
 
 
-def order_labels_by_stress(df: pd.DataFrame, labels: np.ndarray) -> np.ndarray:
-    """Renumber clusters so 0 = calmest, K-1 = most volatile.
+def stress_remap(df: pd.DataFrame, labels: np.ndarray) -> dict:
+    """Map raw cluster id -> stress rank (0 = calmest, K-1 = most volatile).
 
-    k-means hands back arbitrary integer labels. We sort the clusters by
-    their average total volatility (gold_vol + oil_vol) and relabel, so
-    the regime numbers carry a consistent meaning across runs.
+    Clustering hands back arbitrary integer labels. We sort the clusters
+    by their average total volatility (gold_vol + oil_vol), so the regime
+    numbers carry a consistent meaning across runs and across algorithms.
+    Returned as a dict so callers can also reorder e.g. GMM probability
+    columns, not just the label vector.
     """
     stress = (
         pd.Series(df["gold_vol_20d"].to_numpy() + df["oil_vol_20d"].to_numpy())
@@ -178,7 +180,12 @@ def order_labels_by_stress(df: pd.DataFrame, labels: np.ndarray) -> np.ndarray:
         .mean()
         .sort_values()
     )
-    remap = {old: new for new, old in enumerate(stress.index)}
+    return {old: new for new, old in enumerate(stress.index)}
+
+
+def order_labels_by_stress(df: pd.DataFrame, labels: np.ndarray) -> np.ndarray:
+    """Renumber clusters so 0 = calmest, K-1 = most volatile."""
+    remap = stress_remap(df, labels)
     return np.array([remap[old] for old in labels])
 
 
