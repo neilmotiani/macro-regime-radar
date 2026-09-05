@@ -28,12 +28,17 @@ month). The features, and why each one is shaped the way it is:
      raw (not annualised) daily-return std - multiply by sqrt(252) if you
      ever want an annualised number.
 
-  3. 20-day rolling CORRELATION between gold's and oil's daily log
-     returns. This is one of the headline regime signals: gold and oil
-     moving together vs. apart tells you a lot about whether a common
-     macro force (the dollar, real yields, global risk appetite) is
-     driving both, or whether something asset-specific (an oil supply
-     shock, a gold safe-haven bid) is dominating.
+  3. 20-day rolling CORRELATIONS between pairs of daily log-return series:
+       - gold vs oil       (do the two commodities move together?)
+       - gold vs dollar     (a strongly negative value = "dollar-driven"
+                             gold: gold is just the inverse of the USD)
+       - gold vs vix        (a positive value = "safe-haven" gold: gold
+                             rises when fear rises)
+       - oil vs dollar      (oil's own dollar sensitivity)
+     These are the headline regime signals. Which macro force is in
+     charge - the dollar, global risk appetite, or something
+     asset-specific like an oil supply shock - shows up as a shift in
+     which of these correlations is large.
 
   4. 20-day rolling MOMENTUM for gold and oil: the cumulative return over
      the trailing 20 days. Because we already have daily log returns,
@@ -73,6 +78,15 @@ RETURN_COLS = ["gold", "oil", "dollar_index", "vix"]
 # Columns we compute rolling vol / momentum for.
 ROLLING_ASSET_COLS = ["gold", "oil"]
 
+# Pairs we compute a rolling return-correlation for. Each entry is
+# (name_a, name_b) and produces a column "{a}_{b}_corr_{WINDOW}d".
+CORRELATION_PAIRS = [
+    ("gold", "oil"),
+    ("gold", "dollar_index"),
+    ("gold", "vix"),
+    ("oil", "dollar_index"),
+]
+
 
 # --- Feature construction ----------------------------------------------
 
@@ -100,12 +114,13 @@ def build_features(prices: pd.DataFrame) -> pd.DataFrame:
             log_returns[col].rolling(window=WINDOW).std()
         )
 
-    # (3) 20-day rolling correlation between gold and oil daily log returns.
-    #     Series.rolling(...).corr(other) lines the two series up by date
-    #     and computes Pearson correlation within each trailing window.
-    feats[f"gold_oil_corr_{WINDOW}d"] = (
-        log_returns["gold"].rolling(window=WINDOW).corr(log_returns["oil"])
-    )
+    # (3) 20-day rolling correlations between pairs of daily-log-return
+    #     series. Series.rolling(...).corr(other) lines the two series up by
+    #     date and computes Pearson correlation within each trailing window.
+    for a, b in CORRELATION_PAIRS:
+        feats[f"{a}_{b}_corr_{WINDOW}d"] = (
+            log_returns[a].rolling(window=WINDOW).corr(log_returns[b])
+        )
 
     # (4) 20-day rolling momentum = cumulative return over the window.
     #     Sum of daily log returns over WINDOW days == ln(P_t / P_{t-WINDOW}),

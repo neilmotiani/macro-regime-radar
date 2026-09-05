@@ -1,11 +1,12 @@
 # Direct dependencies for Macro Regime Radar.
 # Install into the project venv:  ./venv/bin/pip install -r requirements.txt
 #
-# Versions pinned to what Stage 1 was built and tested against.
-# scikit-learn and streamlit get added at Stages 4-5.
+# Versions pinned to what each stage was built and tested against.
+# streamlit gets added at Stage 5.
 
 yfinance==1.7.0
 pandas==3.0.5
 numpy==2.5.2
 statsmodels==0.15.0
 matplotlib==3.11.1
+scikit-learn==1.9.0  # Stage 4: k-means / GMM regime clustering

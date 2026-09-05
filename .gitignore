@@ -23,3 +23,6 @@ CLAUDE.md
 # Keep small hand-checked samples in data/samples/ if we ever add them.
 data/*.csv
 !data/samples/*.csv
+
+# Generated figures - regenerable by re-running the scripts.
+figures/
