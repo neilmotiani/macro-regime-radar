@@ -2,7 +2,15 @@
 Stage 2: Data cleaning.
 
 Turns data/raw_prices.csv (the outer-joined raw table from fetch_data.py)
-into data/clean_prices.csv by applying three rules, IN THIS ORDER:
+into data/clean_prices.csv by applying these rules, IN THIS ORDER:
+
+  0. Drop any row where a price column (gold, oil, dollar_index, vix) is
+     <= 0. A price level can't be zero or negative. The one real case is
+     2020-04-20, when front-month WTI crude "settled" at -$37.63 because
+     holders had nowhere to store physical barrels at contract expiry -
+     a futures-plumbing artifact, not a macro signal about oil, and it
+     would break the log-return math in Stage 3. (yield_10y is exempt: a
+     yield legitimately can be zero or negative.)
 
   1. Forward-fill `yield_10y` ONLY on rows where it is the single missing
      column - i.e. every other asset traded that day, so it was a normal
@@ -70,9 +78,19 @@ def _targeted_ffill(df: pd.DataFrame, column: str) -> pd.Index:
     return target_rows
 
 
+# Price columns that must be strictly positive (yield_10y is deliberately
+# not in this list - see Rule 0 in the module docstring).
+PRICE_COLUMNS = ["gold", "oil", "dollar_index", "vix"]
+
+
 def clean_prices(raw: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
-    """Apply the three cleaning rules. Returns (clean_df, report_dict)."""
+    """Apply the cleaning rules in order. Returns (clean_df, report_dict)."""
     df = raw.copy()
+
+    # Rule 0 - drop rows with an impossible (<= 0) price level.
+    nonpositive_mask = (df[PRICE_COLUMNS] <= 0).any(axis=1)
+    nonpositive_rows = df.index[nonpositive_mask]
+    df = df[~nonpositive_mask]
 
     # Rule 1 - yield_10y, then Rule 2 - gold. Order matters only in that we
     # re-check missingness on the already-updated frame; in practice the two
@@ -89,6 +107,7 @@ def clean_prices(raw: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
     n_dropped = before_drop - len(df)
 
     report = {
+        "nonpositive_rows": nonpositive_rows,
         "yield_filled": yield_filled,
         "gold_filled": gold_filled,
         "dropped_rows": dropped_rows,
@@ -107,6 +126,12 @@ def print_report(report: dict) -> None:
     print("\n--- Cleaning report -------------------------------------")
     print(f"Rows in  (raw)   : {report['rows_in']}")
     print(f"Rows out (clean) : {report['rows_out']}")
+
+    print(
+        f"\nDropped (bad price, <= 0)  : {len(report['nonpositive_rows'])} rows"
+    )
+    for d in report["nonpositive_rows"]:
+        print(f"    drop             {d.date()}")
 
     print(
         f"\nForward-filled    : {report['n_filled']} rows "
