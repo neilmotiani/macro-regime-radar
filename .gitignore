@@ -19,6 +19,9 @@ __pycache__/
 # Local project notes - not part of the public repo
 CLAUDE.md
 
+# Local scratch / smoke-test script - not part of the pipeline
+src/demo.py
+
 # Data - raw and cleaned CSVs are regenerable from the pipeline.
 # Keep small hand-checked samples in data/samples/ if we ever add them.
 data/*.csv
