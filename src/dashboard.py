@@ -1,40 +1,34 @@
-import streamlit as st
-import pandas as pd
-import plotly.graph_objects as go
+"""
+Stage 5: Macro Regime Radar dashboard.
 
+Run from inside src/:
+
+    ../venv/bin/python -m streamlit run dashboard.py
+"""
+
+import numpy as np
+import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
+import streamlit as st
+from plotly.subplots import make_subplots
+
+st.set_page_config(page_title="Macro Regime Radar", layout="wide")
 st.title("Macro Regime Radar")
 
-# --- Load data built in previous stages -------------------------------------
-
-prices = pd.read_csv("../data/clean_prices.csv", index_col=0, parse_dates=True)
-
-# The Stage 4 GMM output: one row per trading day with a `regime` label
-# (0-4) and a `confidence` (the GMM's max posterior probability that day).
-regimes = pd.read_csv("../data/regimes_gmm.csv", index_col=0, parse_dates=True)
-
-# Merge the regime + confidence columns onto `prices` by date.
-#
-# how="left" keeps EVERY row of `prices` and just fills regime/confidence
-# with NaN where regimes_gmm.csv has no matching date. That matters here:
-# regimes_gmm.csv is ~20 rows shorter than clean_prices.csv because Stage 3
-# threw away the first 20 days as rolling-window warm-up (a 20-day rolling
-# feature has nothing to compute until day 21). An inner join would
-# silently drop those early price rows; a left join keeps the price
-# history whole and simply has "no regime yet" at the very start.
-prices = prices.join(regimes[["regime", "confidence"]], how="left")
+# The GMM labels each day independently, so the regime can flip for a day
+# or two around a transition and then flip straight back. Those blips
+# aren't real regime changes. We absorb any episode shorter than this many
+# trading days into its longer neighbour before displaying anything.
+MIN_REGIME_RUN = 10  # ~two trading weeks
 
 # --- Regime display styles -------------------------------------------------
-
+#
 # Keyed by the regime number Stage 4 assigned (0 = calmest ... 4 = crisis).
-# Each entry has two colours:
-#   "band"   - the low-opacity RGBA fill drawn as a background band BEHIND
-#              the price lines. It should tint the chart, not dominate it.
-#              Crisis gets a higher alpha (0.25 vs 0.15) so the eye catches
-#              it: it's the rarest regime (~4-6% of days) and the one you
-#              most want to notice.
-#   "swatch" - the same hue at full opacity, used for the little squares in
-#              the legend below the chart (a 15%-opacity swatch would be
-#              almost invisible against the page background).
+#   "band"   - low-opacity RGBA, drawn as a background band BEHIND the lines.
+#              Crisis gets more alpha (0.25 vs 0.15) so the eye catches it.
+#   "swatch" - the same hue at full opacity, for legend squares / the banner
+#              (a 15%-opacity swatch is nearly invisible on the page).
 REGIME_STYLE = {
     0: {"name": "Calm / Low-Rate", "band": "rgba(76, 175, 80, 0.15)",   "swatch": "#4CAF50"},
     1: {"name": "High-Yield",      "band": "rgba(66, 133, 244, 0.15)",  "swatch": "#4285F4"},
@@ -43,108 +37,194 @@ REGIME_STYLE = {
     4: {"name": "Crisis",          "band": "rgba(229, 57, 53, 0.25)",   "swatch": "#E53935"},
 }
 
-st.subheader("Gold vs. Oil")
 
-# Streamlit's built-in line chart wants the columns you want plotted
-days_back = st.slider("Show last N trading days", min_value=30, max_value=len(prices), value=90)
+# --- Data loading --------------------------------------------------------
 
+
+def smooth_regimes(regime: pd.Series, min_run: int) -> pd.Series:
+    """Absorb regime episodes shorter than `min_run` days into a neighbour.
+
+    Run-length-encode the label sequence; repeatedly take the shortest run
+    that is still below the threshold and overwrite it with whichever
+    adjacent run is *longer*. Merging shortest-first, into the longer side,
+    keeps the result stable and stops it from snowballing toward one
+    regime. Each pass strictly reduces the number of runs, so it
+    terminates. NaN warm-up rows are left untouched.
+    """
+    valid = regime.dropna()
+    vals = valid.to_numpy().astype(int)
+
+    while True:
+        change = np.flatnonzero(np.diff(vals)) + 1
+        starts = np.concatenate([[0], change])
+        ends = np.concatenate([change, [len(vals)]])
+        lengths = ends - starts
+
+        shortest = next(
+            (i for i in np.argsort(lengths) if lengths[i] < min_run), None
+        )
+        if shortest is None:
+            break
+
+        left_len = lengths[shortest - 1] if shortest > 0 else -1
+        right_len = lengths[shortest + 1] if shortest < len(lengths) - 1 else -1
+        source = shortest - 1 if left_len >= right_len else shortest + 1
+        vals[starts[shortest]:ends[shortest]] = vals[starts[source]]
+
+    out = regime.copy()
+    out.loc[valid.index] = vals
+    return out
+
+
+@st.cache_data
+def load_data():
+    """Read the three pipeline outputs and merge regimes onto prices.
+
+    @st.cache_data memoises this: Streamlit re-runs the whole script top to
+    bottom on every widget interaction (each slider nudge), and without the
+    cache we'd re-read three CSVs from disk every time. With it, the files
+    are read once and the same DataFrames are handed back on later runs.
+    """
+    prices = pd.read_csv("../data/clean_prices.csv", index_col=0, parse_dates=True)
+    regimes = pd.read_csv("../data/regimes_gmm.csv", index_col=0, parse_dates=True)
+    features = pd.read_csv("../data/features.csv", index_col=0, parse_dates=True)
+
+    # Smooth away the sub-two-week flicker. Keep the raw label around too.
+    regimes["regime_raw"] = regimes["regime"]
+    regimes["regime"] = smooth_regimes(regimes["regime"], MIN_REGIME_RUN)
+
+    # how="left" keeps every price row; regimes_gmm.csv is ~20 rows shorter
+    # because Stage 3 dropped the first 20 days as rolling-window warm-up.
+    # An inner join would silently delete those early price rows.
+    prices = prices.join(regimes[["regime", "confidence"]], how="left")
+    return prices, regimes, features
+
+
+prices, regimes, features = load_data()
+
+
+# --- Shared helper: regime background shading --------------------------
+
+
+def add_regime_shading(fig, frame, row=None, col=1, opaque=False):
+    """Draw one background band per contiguous regime episode in `frame`.
+
+    The day-by-day `regime` column is collapsed into "blocks" first:
+      .ne(.shift())  -> True on the first day of each new episode
+      .cumsum()      -> a running id that's constant within an episode
+    so grouping by it yields one sub-frame per episode, and we draw one
+    rectangle spanning each episode's date range instead of one per day.
+
+    row/col route the band to a specific subplot when `fig` is a
+    make_subplots grid. `opaque=True` uses the solid swatch colour (for
+    the timeline ribbon, which is nothing but shading).
+    """
+    regime_series = frame["regime"]
+    block_id = regime_series.ne(regime_series.shift()).cumsum()
+
+    for _, block in frame.groupby(block_id):
+        regime_value = block["regime"].iloc[0]
+        if pd.isna(regime_value):  # warm-up rows with no regime yet
+            continue
+
+        style = REGIME_STYLE[int(regime_value)]
+        target = {} if row is None else {"row": row, "col": col}
+        fig.add_vrect(
+            x0=block.index[0],
+            x1=block.index[-1],
+            fillcolor=style["swatch"] if opaque else style["band"],
+            opacity=0.85 if opaque else 1.0,
+            line_width=0,
+            layer="below",
+            **target,
+        )
+
+
+# --- Section 1: current-regime banner --------------------------------
+
+# The most recent row that actually has a regime label.
+labelled = prices.dropna(subset=["regime"])
+latest_date = labelled.index[-1]
+current_regime = int(labelled["regime"].iloc[-1])
+latest_confidence = float(labelled["confidence"].iloc[-1])
+
+# How long has this regime been in force? Walk backwards from the end
+# while the label stays the same.
+reg_values = labelled["regime"].to_numpy()
+run_length = 1
+while run_length < len(reg_values) and reg_values[-1 - run_length] == current_regime:
+    run_length += 1
+active_since = labelled.index[-run_length]
+
+style = REGIME_STYLE[current_regime]
+st.markdown(
+    f"""
+    <div style="border-left:6px solid {style['swatch']};background:{style['band']};
+         padding:12px 18px;border-radius:6px;margin-bottom:8px;">
+      <div style="font-size:0.78rem;letter-spacing:0.06em;opacity:0.7;">
+        CURRENT REGIME &nbsp;·&nbsp; as of {latest_date:%Y-%m-%d}
+      </div>
+      <div style="font-size:1.5rem;font-weight:600;margin:2px 0;">
+        {style['name']}
+      </div>
+      <div style="font-size:0.9rem;opacity:0.85;">
+        Active since {active_since:%Y-%m-%d}
+        &nbsp;·&nbsp; {run_length} trading days
+        &nbsp;·&nbsp; GMM confidence {latest_confidence:.0%}
+      </div>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
+
+
+# --- Window selector -------------------------------------------------
+
+days_back = st.slider(
+    "Show last N trading days", min_value=30, max_value=len(prices), value=90
+)
 recent = prices.tail(days_back)
 
-st.write(f"Data for the selected window ({days_back} trading days):")
-st.dataframe(recent.tail(10).sort_index(ascending=False))
 
-# Normalize to 100 at the start of the SELECTED window, not the start of
-# all history - otherwise a short recent window would just look like two
-# flat lines near 100, since nothing's had time to drift from day one.
+def regime_legend():
+    """A horizontal 'swatch + name' key, rendered below a chart."""
+    items = "".join(
+        f'<span style="display:inline-flex;align-items:center;margin:2px 18px 2px 0;'
+        f'white-space:nowrap;">'
+        f'<span style="display:inline-block;width:13px;height:13px;border-radius:3px;'
+        f'background:{s["swatch"]};margin-right:6px;"></span>{s["name"]}</span>'
+        for s in REGIME_STYLE.values()
+    )
+    st.markdown(
+        '<div style="font-size:0.8rem;opacity:0.7;margin-bottom:2px;">Regime shading</div>'
+        f'<div style="display:flex;flex-wrap:wrap;font-size:0.85rem;">{items}</div>',
+        unsafe_allow_html=True,
+    )
+
+
+# --- Section 2: Gold vs Oil ----------------------------------------
+
+st.subheader("Gold vs. Oil")
+
+# Normalise to 100 at the START OF THE SELECTED WINDOW, not the start of all
+# history - otherwise a short window is just two flat lines near 100.
 normalized = recent[["gold", "oil"]] / recent[["gold", "oil"]].iloc[0] * 100
 
-# --- Build the regime-shaded Plotly chart ---------------------------------
-
 fig = go.Figure()
-
-# Step 1: collapse the day-by-day regime column into consecutive "blocks".
-#
-# `recent["regime"]` is one label per day, e.g. 0,0,0,1,1,4,4,4,1,1. We
-# want to shade one rectangle per *episode* (0-run, 1-run, 4-run, 1-run),
-# not one tiny rectangle per day.
-#
-#   .shift()           moves every value down one row, so row i now sees
-#                      "what was the regime yesterday?"
-#   .ne(...)           True on any row whose regime differs from the day
-#                      before - i.e. the first day of a new episode. Row 0
-#                      is always True (its shifted value is NaN).
-#   .cumsum()          running total of those True flags. It ticks up by 1
-#                      at the start of each new episode and stays flat
-#                      within an episode, so every day in the same episode
-#                      gets the same integer id.
-#
-# For 0,0,0,1,1,4,4,4,1,1  ->  flags 1,0,0,1,0,1,0,0,1,0
-#                          ->  block ids 1,1,1,2,2,3,3,3,4,4
-regime_series = recent["regime"]
-block_id = regime_series.ne(regime_series.shift()).cumsum()
-
-# Step 2: one shaded rectangle (vrect) per block.
-for _, block in recent.groupby(block_id):
-    regime_value = block["regime"].iloc[0]
-
-    # Skip the warm-up stretch at the very start of history, where the
-    # left join left regime as NaN. (NaN != NaN in pandas, so each such
-    # day actually lands in its own block - we just skip them all.)
-    if pd.isna(regime_value):
-        continue
-
-    style = REGIME_STYLE[int(regime_value)]
-    fig.add_vrect(
-        x0=block.index[0],
-        x1=block.index[-1],
-        fillcolor=style["band"],
-        line_width=0,
-        layer="below",              # keep the band behind the price lines
-    )
-    # No inline label: when several short episodes sit close together the
-    # per-rectangle annotations overlap into an unreadable smear. The
-    # colour key lives in a separate legend below the chart instead.
-
-# Step 3: the price lines themselves, drawn on top of the shading, using
-# the already-normalized (start = 100) values.
-fig.add_trace(
-    go.Scatter(x=normalized.index, y=normalized["gold"], name="Gold", mode="lines")
-)
-fig.add_trace(
-    go.Scatter(x=normalized.index, y=normalized["oil"], name="Oil", mode="lines")
-)
-
-# Step 4: styling. "x unified" hover shows gold AND oil in one tooltip at
-# whatever date the cursor is over, instead of two separate hover boxes.
+add_regime_shading(fig, recent)
+fig.add_trace(go.Scatter(x=normalized.index, y=normalized["gold"], name="Gold", mode="lines"))
+fig.add_trace(go.Scatter(x=normalized.index, y=normalized["oil"], name="Oil", mode="lines"))
 fig.update_layout(
     template="plotly_dark",
-    hovermode="x unified",
+    hovermode="x unified",  # one tooltip with both values at the cursor's date
     yaxis_title="Indexed to 100 at window start",
     xaxis_title=None,
     margin=dict(t=30, b=20),
+    height=380,
     legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="left", x=0),
 )
-
 st.plotly_chart(fig, width="stretch")
-
-# --- Regime colour legend (below the chart, not crammed onto it) ----------
-#
-# One flex row of "swatch + name" items. Built as a single HTML string and
-# handed to st.markdown with unsafe_allow_html=True (Streamlit blocks raw
-# HTML by default). flex-wrap lets it spill onto a second line on a narrow
-# screen instead of overflowing.
-legend_items = "".join(
-    f'<span style="display:inline-flex;align-items:center;margin:2px 18px 2px 0;'
-    f'white-space:nowrap;">'
-    f'<span style="display:inline-block;width:13px;height:13px;border-radius:3px;'
-    f'background:{style["swatch"]};margin-right:6px;"></span>{style["name"]}</span>'
-    for style in REGIME_STYLE.values()
-)
-st.markdown(
-    '<div style="font-size:0.8rem;opacity:0.7;margin-bottom:2px;">Regime shading</div>'
-    f'<div style="display:flex;flex-wrap:wrap;font-size:0.85rem;">{legend_items}</div>',
-    unsafe_allow_html=True,
-)
+regime_legend()
 
 col1, col2 = st.columns(2)
 with col1:
@@ -153,3 +233,151 @@ with col1:
 with col2:
     oil_change = (recent["oil"].iloc[-1] / recent["oil"].iloc[0] - 1) * 100
     st.metric("Oil", f"${recent['oil'].iloc[-1]:,.2f}", f"{oil_change:+.1f}%")
+
+with st.expander("Show data table for this window"):
+    st.dataframe(recent.tail(15).sort_index(ascending=False))
+
+
+# --- Section 3: macro drivers ------------------------------------
+
+st.subheader("Macro drivers")
+st.caption(
+    "The forces the regimes are built from. Same window and same regime "
+    "shading as the chart above - shown as raw levels, not indexed."
+)
+
+DRIVERS = [
+    ("dollar_index", "US Dollar Index (DXY)"),
+    ("yield_10y", "10-Year Treasury Yield (%)"),
+    ("vix", "VIX"),
+]
+
+drivers_fig = make_subplots(
+    rows=3, cols=1, shared_xaxes=True, vertical_spacing=0.06,
+    subplot_titles=[label for _, label in DRIVERS],
+)
+for i, (column, _label) in enumerate(DRIVERS, start=1):
+    # Trace FIRST, then shading. plotly's add_vrect(row=, col=) skips any
+    # subplot it considers "empty" (no traces yet), so shading a subplot
+    # before it has a line silently draws nothing.
+    drivers_fig.add_trace(
+        go.Scatter(x=recent.index, y=recent[column], mode="lines", name=column,
+                   line=dict(color="#9ecbff")),
+        row=i, col=1,
+    )
+    add_regime_shading(drivers_fig, recent, row=i, col=1)
+drivers_fig.update_layout(
+    template="plotly_dark",
+    hovermode="x unified",
+    showlegend=False,
+    height=620,
+    margin=dict(t=40, b=20),
+)
+st.plotly_chart(drivers_fig, width="stretch")
+
+
+# --- Section 4: full-history regime ribbon ---------------------
+
+st.subheader("Regime history")
+st.caption(
+    "Every trading day since 2004, coloured by regime - independent of the "
+    f"slider above. Episodes shorter than {MIN_REGIME_RUN} trading days have "
+    "been merged into their neighbour to strip out day-to-day flicker."
+)
+
+# Built as a Gantt-style timeline: one bar per regime episode. We first
+# collapse the full-history regime column into episodes (same block trick
+# as the shading helper), then hand plotly a table of
+# start / end / regime-name rows. px.timeline draws each as a horizontal
+# bar and gives us hover (regime name + dates) for free.
+labelled_full = prices.dropna(subset=["regime"])
+full_block_id = labelled_full["regime"].ne(labelled_full["regime"].shift()).cumsum()
+
+episodes = []
+for _, block in labelled_full.groupby(full_block_id):
+    regime_value = int(block["regime"].iloc[0])
+    episodes.append(
+        {
+            "start": block.index[0],
+            # +1 day so a single-day episode still has visible width
+            "end": block.index[-1] + pd.Timedelta(days=1),
+            "Regime": REGIME_STYLE[regime_value]["name"],
+            "lane": "regime",
+        }
+    )
+episodes_df = pd.DataFrame(episodes)
+
+ribbon = px.timeline(
+    episodes_df,
+    x_start="start",
+    x_end="end",
+    y="lane",
+    color="Regime",
+    color_discrete_map={s["name"]: s["swatch"] for s in REGIME_STYLE.values()},
+)
+ribbon.update_yaxes(visible=False)
+ribbon.update_layout(
+    template="plotly_dark",
+    height=130,
+    margin=dict(l=0, r=0, t=8, b=24),
+    showlegend=False,
+    xaxis_title=None,
+)
+st.plotly_chart(ribbon, width="stretch")
+regime_legend()
+
+
+# --- Section 5: per-regime statistics --------------------------
+
+st.subheader("What each regime looks like")
+st.caption(
+    "Averages over the full history (2004-present), one row per regime. "
+    "Returns and correlations come from the Stage 3 features; regimes are "
+    f"smoothed to a {MIN_REGIME_RUN}-day minimum episode length."
+)
+
+# features.csv and regimes_gmm.csv share the same dates (regimes were built
+# from features), so an inner join lines them up 1:1.
+feat_reg = features.join(regimes[["regime", "confidence"]], how="inner")
+
+summary = feat_reg.groupby("regime").agg(
+    days=("regime", "size"),
+    gold_ret=("gold_log_return", "mean"),
+    oil_ret=("oil_log_return", "mean"),
+    gold_vol=("gold_vol_20d", "mean"),
+    oil_vol=("oil_vol_20d", "mean"),
+    gold_oil_corr=("gold_oil_corr_20d", "mean"),
+    yield_10y=("yield_10y", "mean"),
+    confidence=("confidence", "mean"),
+)
+summary["share"] = summary["days"] / summary["days"].sum()
+
+# Readable row labels (regime name) and column headers for display.
+summary.index = [REGIME_STYLE[r]["name"] for r in summary.index]
+summary.index.name = "Regime"
+summary = summary[
+    ["days", "share", "gold_ret", "oil_ret", "gold_vol", "oil_vol",
+     "gold_oil_corr", "yield_10y", "confidence"]
+]
+summary.columns = [
+    "Days", "Share of days",
+    "Avg gold daily return", "Avg oil daily return",
+    "Gold vol (20d)", "Oil vol (20d)", "Gold–oil corr (20d)",
+    "Avg 10Y yield (%)", "Avg GMM confidence",
+]
+
+st.dataframe(
+    summary.style.format(
+        {
+            "Share of days": "{:.1%}",
+            "Avg gold daily return": "{:+.3%}",
+            "Avg oil daily return": "{:+.3%}",
+            "Gold vol (20d)": "{:.3f}",
+            "Oil vol (20d)": "{:.3f}",
+            "Gold–oil corr (20d)": "{:+.2f}",
+            "Avg 10Y yield (%)": "{:.2f}",
+            "Avg GMM confidence": "{:.0%}",
+        }
+    ),
+    width="stretch",
+)
