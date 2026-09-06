@@ -75,25 +75,24 @@ def episode_containing(date: pd.Timestamp, episodes: pd.DataFrame):
     return hit.iloc[0] if len(hit) else None
 
 
-def is_major(shift: pd.Series) -> bool:
+def is_major(shift) -> bool:
     """A shift worth calling out: touches Crisis, or opens a long episode."""
     return (
-        shift["to_regime"] == 4
-        or shift["from_regime"] == 4
-        or shift["new_regime_days"] >= 90
+        shift.to_regime == 4
+        or shift.from_regime == 4
+        or shift.new_regime_days >= 90
     )
 
 
-def main() -> None:
-    shifts, episodes = load_shifts_and_episodes()
-    events = load_events()
+def build_shift_table(shifts: pd.DataFrame, events: pd.DataFrame) -> pd.DataFrame:
+    """One row per regime shift, with the events sitting near it.
 
-    # --- attach nearby events to every shift ---
+    Reused by both this script's report and the dashboard, so it returns a
+    plain DataFrame (dates as Timestamps) and does no printing.
+    """
     rows = []
-    matched_event_dates = set()
     for shift in shifts.itertuples():
         near = events_near(shift.date, events)
-        matched_event_dates.update(near["date"])
 
         # the closest event that is not *after* the shift - the likely lead
         leads = near[near["days_from_shift"] <= 0]
@@ -101,22 +100,40 @@ def main() -> None:
 
         rows.append(
             {
-                "date": shift.date.date(),
+                "date": shift.date,
                 "regime_from": shift.from_name,
                 "regime_to": shift.to_name,
                 "new_regime_days": shift.new_regime_days,
-                "major": is_major(shifts.loc[shift.Index]),
+                "major": is_major(shift),
                 "n_events": len(near),
                 "lead_event": None if lead is None else lead["event"],
-                "lead_event_date": None if lead is None else lead["date"].date(),
+                "lead_event_date": None if lead is None else lead["date"],
                 "lead_gap_days": None if lead is None else int(lead["days_from_shift"]),
                 "nearby_events": " ; ".join(
                     f"{r.date.date()} {r.event}" for r in near.itertuples()
                 ),
             }
         )
-    shift_table = pd.DataFrame(rows)
+    return pd.DataFrame(rows)
+
+
+def main() -> None:
+    shifts, episodes = load_shifts_and_episodes()
+    events = load_events()
+
+    shift_table = build_shift_table(shifts, events)
     shift_table.to_csv(OUTPUT_PATH, index=False)
+
+    # An event is "matched" if it lands in the window of at least one shift.
+    all_shift_dates = shifts["date"]
+    matched_mask = events["date"].apply(
+        lambda d: bool(
+            (
+                (all_shift_dates - d >= pd.Timedelta(days=-LOOKAHEAD_DAYS))
+                & (all_shift_dates - d <= pd.Timedelta(days=LOOKBACK_DAYS))
+            ).any()
+        )
+    )
 
     # --- report ---
     n_shifts = len(shift_table)
@@ -132,7 +149,7 @@ def main() -> None:
             gap = int(row.lead_gap_days)
             # A tight gap reads as causal; a loose one is just "around then".
             label = "likely trigger" if gap >= -21 else "preceded by"
-            print(f'     {label}: {row.lead_event_date}  "{row.lead_event}"  ({gap:+d}d)')
+            print(f'     {label}: {row.lead_event_date.date()}  "{row.lead_event}"  ({gap:+d}d)')
         elif row.nearby_events:
             print(f"     nearby: {row.nearby_events}")
         else:
@@ -140,17 +157,17 @@ def main() -> None:
 
     print("=== Major shifts (Crisis in/out, or a 90+ day new regime) =========")
     for row in shift_table[shift_table["major"]].itertuples():
-        print(f"\n  {row.date}  {row.regime_from}  ->  {row.regime_to}   (new episode {row.new_regime_days}d)")
+        print(f"\n  {row.date.date()}  {row.regime_from}  ->  {row.regime_to}   (new episode {row.new_regime_days}d)")
         describe_match(row)
 
     print("\n\n=== Other regime shifts that line up with an event ===============")
     other = shift_table[(~shift_table["major"]) & (shift_table["n_events"] > 0)]
     for row in other.itertuples():
-        print(f"\n  {row.date}  {row.regime_from}  ->  {row.regime_to}   (new episode {row.new_regime_days}d)")
+        print(f"\n  {row.date.date()}  {row.regime_from}  ->  {row.regime_to}   (new episode {row.new_regime_days}d)")
         describe_match(row)
 
     # --- events that didn't land near any shift ---
-    unmatched = events[~events["date"].isin(matched_event_dates)]
+    unmatched = events[~matched_mask]
     print("\n\n=== Events with no regime shift nearby (mid-regime context) =======")
     for ev in unmatched.itertuples():
         ep = episode_containing(ev.date, episodes)

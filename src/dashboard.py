@@ -1,5 +1,5 @@
 """
-Stage 5: Macro Regime Radar dashboard.
+Stage 5 + 6: Macro Regime Radar dashboard.
 
 Run from inside src/:
 
@@ -12,7 +12,8 @@ import plotly.graph_objects as go
 import streamlit as st
 from plotly.subplots import make_subplots
 
-from regime_labels import MIN_REGIME_RUN, smooth_regimes
+from annotate_events import LOOKAHEAD_DAYS, LOOKBACK_DAYS, build_shift_table
+from regime_labels import MIN_REGIME_RUN, regime_shifts, smooth_regimes
 
 st.set_page_config(page_title="Macro Regime Radar", layout="wide")
 st.title("Macro Regime Radar")
@@ -38,29 +39,33 @@ REGIME_STYLE = {
 
 @st.cache_data
 def load_data():
-    """Read the three pipeline outputs and merge regimes onto prices.
+    """Read the pipeline outputs, merge regimes onto prices, and match the
+    curated macro events to the regime shifts.
 
     @st.cache_data memoises this: Streamlit re-runs the whole script top to
     bottom on every widget interaction (each slider nudge), and without the
-    cache we'd re-read three CSVs from disk every time. With it, the files
-    are read once and the same DataFrames are handed back on later runs.
+    cache we'd re-read the CSVs and redo the matching every time.
     """
     prices = pd.read_csv("../data/clean_prices.csv", index_col=0, parse_dates=True)
     regimes = pd.read_csv("../data/regimes_gmm.csv", index_col=0, parse_dates=True)
     features = pd.read_csv("../data/features.csv", index_col=0, parse_dates=True)
+    events = pd.read_csv("../data/events.csv", parse_dates=["date"]).sort_values("date")
 
     # Smooth away the sub-two-week flicker. Keep the raw label around too.
     regimes["regime_raw"] = regimes["regime"]
     regimes["regime"] = smooth_regimes(regimes["regime"], MIN_REGIME_RUN)
 
+    # Stage 6: derive the regime shifts and tie curated events to them.
+    shift_table = build_shift_table(regime_shifts(regimes["regime"]), events)
+
     # how="left" keeps every price row; regimes_gmm.csv is ~20 rows shorter
     # because Stage 3 dropped the first 20 days as rolling-window warm-up.
     # An inner join would silently delete those early price rows.
     prices = prices.join(regimes[["regime", "confidence"]], how="left")
-    return prices, regimes, features
+    return prices, regimes, features, events, shift_table
 
 
-prices, regimes, features = load_data()
+prices, regimes, features, events, shift_table = load_data()
 
 
 # --- Shared helper: regime background shading --------------------------
@@ -174,6 +179,31 @@ fig = go.Figure()
 add_regime_shading(fig, recent)
 fig.add_trace(go.Scatter(x=normalized.index, y=normalized["gold"], name="Gold", mode="lines"))
 fig.add_trace(go.Scatter(x=normalized.index, y=normalized["oil"], name="Oil", mode="lines"))
+
+# Stage 6: mark curated macro events that fall inside the visible window.
+# A dotted vertical line for the eye, plus a marker at the top of the plot
+# whose hover text names the event (add_vline itself carries no hover).
+window_events = events[
+    (events["date"] >= recent.index[0]) & (events["date"] <= recent.index[-1])
+]
+for event_date in window_events["date"]:
+    fig.add_vline(x=event_date, line=dict(color="rgba(210,210,210,0.35)", width=1, dash="dot"))
+if len(window_events):
+    fig.add_trace(
+        go.Scatter(
+            x=window_events["date"],
+            y=[normalized.to_numpy().max()] * len(window_events),
+            mode="markers",
+            marker=dict(symbol="triangle-down", size=9, color="#d0d0d0"),
+            name="Macro event",
+            hovertext=[
+                f"{d:%Y-%m-%d} &mdash; {e}"
+                for d, e in zip(window_events["date"], window_events["event"])
+            ],
+            hoverinfo="text",
+        )
+    )
+
 fig.update_layout(
     template="plotly_dark",
     hovermode="x unified",  # one tooltip with both values at the cursor's date
@@ -287,7 +317,38 @@ st.plotly_chart(ribbon, width="stretch")
 regime_legend()
 
 
-# --- Section 5: per-regime statistics --------------------------
+# --- Section 5: events behind the regime shifts (Stage 6) ------
+
+st.subheader("What drove the regime shifts")
+st.caption(
+    "The model is unsupervised - it never sees a headline. This checks, "
+    "after the fact, which regime shifts line up with a curated macro "
+    f"event (within -{LOOKBACK_DAYS} / +{LOOKAHEAD_DAYS} days; the label "
+    "lags its cause). Showing only shifts with a match."
+)
+
+matched = shift_table[shift_table["n_events"] > 0].copy()
+shift_view = pd.DataFrame(
+    {
+        "Shift date": matched["date"].dt.date,
+        "Regime change": matched["regime_from"] + "  →  " + matched["regime_to"],
+        "Trigger / nearby event": matched["lead_event"].fillna(matched["nearby_events"]),
+        "Event date": matched["lead_event_date"].dt.date,
+        "Gap (days)": matched["lead_gap_days"],
+    }
+)
+st.dataframe(
+    shift_view.style.format({"Gap (days)": lambda v: "" if pd.isna(v) else f"{int(v):+d}"}),
+    width="stretch",
+    hide_index=True,
+)
+st.caption(
+    f"{len(matched)} of {len(shift_table)} shifts matched. "
+    "A negative gap means the event came before the model reclassified the days."
+)
+
+
+# --- Section 6: per-regime statistics --------------------------
 
 st.subheader("What each regime looks like")
 st.caption(
