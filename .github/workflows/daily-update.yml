@@ -1,0 +1,65 @@
+# Stage 7: daily automation.
+#
+# Re-runs the pipeline on weekday mornings and commits the refreshed data
+# back to the repo, so `main` always carries an up-to-date dataset and the
+# dashboard runs on a fresh clone without anyone touching yfinance.
+#
+# It does NOT re-fit the regime model - score_regimes.py loads the frozen
+# models/regime_gmm.joblib and only labels new days, so historical regime
+# labels never churn. Re-baseline deliberately with `score_regimes.py --fit`
+# and commit the new .joblib by hand.
+
+name: Daily data refresh
+
+on:
+  schedule:
+    # 11:30 UTC, Mon-Fri. ~06:30-07:30 America/New_York, after the prior
+    # US session's close has settled in Yahoo Finance.
+    - cron: "30 11 * * 1-5"
+  workflow_dispatch: {}   # also runnable on demand from the Actions tab
+
+permissions:
+  contents: write          # the job pushes a commit
+
+concurrency:
+  group: daily-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      # Installs the full requirements.txt. The dashboard libs (streamlit,
+      # plotly) aren't needed here, but one requirements file is simpler to
+      # keep honest and the pip cache makes repeat runs cheap.
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run the pipeline
+        working-directory: src
+        run: |
+          python3 fetch_data.py
+          python3 clean_data.py
+          python3 build_features.py
+          python3 score_regimes.py --strict
+          python3 annotate_events.py
+
+      - name: Commit refreshed data
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/raw_prices.csv data/clean_prices.csv data/features.csv \
+                  data/regimes_gmm.csv data/regime_shifts.csv
+          if git diff --cached --quiet; then
+            echo "No data changes today."
+          else
+            git commit -m "chore: daily data refresh ($(date -u +%F)) [skip ci]"
+            git push
+          fi

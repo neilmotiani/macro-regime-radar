@@ -57,25 +57,17 @@ from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
 from sklearn.preprocessing import StandardScaler
 
+# The features k-means clusters on (the smooth, persistent ones). Defined
+# in regime_model.py so the exploratory scripts here and the frozen
+# production model can never disagree about the feature set.
+from regime_model import CLUSTER_FEATURES
+
 # --- Configuration ------------------------------------------------------
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 INPUT_PATH = BASE_DIR / "data" / "features.csv"
 OUTPUT_PATH = BASE_DIR / "data" / "regimes.csv"
 FIGURE_PATH = BASE_DIR / "figures" / "regime_k_selection.png"
-
-# The features k-means actually clusters on (the smooth, persistent ones).
-CLUSTER_FEATURES = [
-    "gold_vol_20d",
-    "oil_vol_20d",
-    "gold_oil_corr_20d",
-    "gold_dollar_index_corr_20d",
-    "gold_vix_corr_20d",
-    "oil_dollar_index_corr_20d",
-    "gold_momentum_20d",
-    "oil_momentum_20d",
-    "yield_10y",
-]
 
 # Range of K to scan for the diagnostic plot.
 K_RANGE = range(2, 11)

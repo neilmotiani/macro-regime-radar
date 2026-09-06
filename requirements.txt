@@ -9,5 +9,6 @@ numpy==2.5.2
 statsmodels==0.15.0
 matplotlib==3.11.1
 scikit-learn==1.9.0  # Stage 4: k-means / GMM regime clustering
+joblib==1.6.0        # Stage 7: persist the frozen regime model
 streamlit==1.63.0    # Stage 5: interactive dashboard
 plotly==7.0.0        # Stage 5: regime-shaded price chart

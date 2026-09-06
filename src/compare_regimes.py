@@ -38,7 +38,10 @@ What the script reports:
      sit.
   5. The GMM regime profile, next to k-means'.
 
-Output: data/regimes_gmm.csv  (date, regime, prob_0..prob_{K-1}, confidence)
+This is an exploratory Stage 4 script - it re-fits its own GMM every run.
+The canonical data/regimes_gmm.csv is produced by score_regimes.py (Stage
+7), which freezes the model so scheduled runs never relabel history. This
+script writes data/regimes_gmm_explore.csv for side-by-side inspection.
 
 Run standalone from inside src/:
 
@@ -65,7 +68,10 @@ from detect_regimes import (
     stress_remap,
 )
 
-GMM_OUTPUT_PATH = BASE_DIR / "data" / "regimes_gmm.csv"
+# This script's own re-fit, for inspection only. The canonical
+# regimes_gmm.csv (frozen model, no history churn) comes from
+# score_regimes.py and is the one the dashboard / pipeline use.
+GMM_OUTPUT_PATH = BASE_DIR / "data" / "regimes_gmm_explore.csv"
 BIC_FIGURE_PATH = BASE_DIR / "figures" / "gmm_bic.png"
 
 # GMM model-selection scan. Wider than the k-means scan because a GMM can
@@ -227,12 +233,15 @@ def main() -> None:
         print("\n--- GMM regime profile (mean feature value per regime) -")
         print(profile_regimes(df, gmm_labels))
 
-    # --- 5. save ---
+    # --- 5. save the exploratory labelling ---
+    # NOTE: the *canonical* data/regimes_gmm.csv is produced by
+    # score_regimes.py, which freezes the model so daily runs don't relabel
+    # history. This file is just this script's own re-fit, for inspection.
     out = proba_df.copy()
     out.insert(0, "regime", gmm_labels)
     out["confidence"] = confidence
     out.to_csv(GMM_OUTPUT_PATH)
-    print(f"\nWrote GMM regimes -> {GMM_OUTPUT_PATH}")
+    print(f"\nWrote exploratory GMM labels -> {GMM_OUTPUT_PATH}")
 
 
 if __name__ == "__main__":

@@ -1,0 +1,93 @@
+date,regime_from,regime_to,new_regime_days,major,n_events,lead_event,lead_event_date,lead_gap_days,nearby_events
+2005-02-24,High-Yield,Commodity-Macro,20,False,0,,,,
+2005-03-24,Commodity-Macro,High-Yield,293,True,0,,,,
+2006-05-24,High-Yield,Commodity-Macro,33,False,0,,,,
+2006-07-13,Commodity-Macro,High-Yield,324,True,0,,,,
+2007-10-26,High-Yield,Commodity-Macro,31,False,1,Fed's first cut of the crisis,2007-09-18,-38.0,2007-09-18 Fed's first cut of the crisis
+2007-12-11,Commodity-Macro,High-Yield,11,False,0,,,,
+2007-12-27,High-Yield,Commodity-Macro,33,False,0,,,,
+2008-02-14,Commodity-Macro,High-Yield,13,False,0,,,,
+2008-03-05,High-Yield,Commodity-Macro,87,False,0,,,,
+2008-07-09,Commodity-Macro,High-Yield,25,False,1,,,,2008-07-11 Crude oil peaks near $147
+2008-08-13,High-Yield,Commodity-Macro,22,False,1,Crude oil peaks near $147,2008-07-11,-33.0,2008-07-11 Crude oil peaks near $147
+2008-09-15,Commodity-Macro,Crisis,102,True,1,Lehman Brothers files for bankruptcy,2008-09-15,0.0,2008-09-15 Lehman Brothers files for bankruptcy
+2009-02-10,Crisis,Safe-Haven,24,True,0,,,,
+2009-03-17,Safe-Haven,Crisis,22,True,2,US equity market bottoms,2009-03-09,-8.0,2009-03-09 US equity market bottoms ; 2009-03-18 Fed expands QE1 to Treasuries
+2009-04-17,Crisis,Safe-Haven,38,True,2,Fed expands QE1 to Treasuries,2009-03-18,-30.0,2009-03-09 US equity market bottoms ; 2009-03-18 Fed expands QE1 to Treasuries
+2009-06-11,Safe-Haven,Commodity-Macro,15,False,0,,,,
+2009-07-02,Commodity-Macro,Calm / Low-Rate,14,False,0,,,,
+2009-07-23,Calm / Low-Rate,Commodity-Macro,26,False,0,,,,
+2009-08-28,Commodity-Macro,Calm / Low-Rate,29,False,0,,,,
+2009-10-09,Calm / Low-Rate,Commodity-Macro,105,True,0,,,,
+2010-03-12,Commodity-Macro,Calm / Low-Rate,39,False,0,,,,
+2010-05-07,Calm / Low-Rate,Safe-Haven,58,False,1,First Greek bailout,2010-05-02,-5.0,2010-05-02 First Greek bailout
+2010-07-30,Safe-Haven,Calm / Low-Rate,56,False,0,,,,
+2010-10-19,Calm / Low-Rate,Commodity-Macro,26,False,0,,,,
+2010-11-24,Commodity-Macro,Calm / Low-Rate,44,False,1,Fed announces QE2,2010-11-03,-21.0,2010-11-03 Fed announces QE2
+2011-01-28,Calm / Low-Rate,Safe-Haven,36,False,0,,,,
+2011-03-22,Safe-Haven,Calm / Low-Rate,85,False,0,,,,
+2011-07-22,Calm / Low-Rate,Safe-Haven,45,False,0,,,,
+2011-09-26,Safe-Haven,Commodity-Macro,152,True,2,Fed launches Operation Twist,2011-09-21,-5.0,2011-09-06 Gold hits its 2011 record ; 2011-09-21 Fed launches Operation Twist
+2012-05-03,Commodity-Macro,Calm / Low-Rate,18,False,0,,,,
+2012-05-30,Calm / Low-Rate,Safe-Haven,22,False,0,,,,
+2012-06-29,Safe-Haven,Commodity-Macro,37,False,0,,,,
+2012-08-22,Commodity-Macro,Calm / Low-Rate,11,False,1,Draghi's 'whatever it takes',2012-07-26,-27.0,2012-07-26 Draghi's 'whatever it takes'
+2012-09-07,Calm / Low-Rate,Commodity-Macro,22,False,2,Draghi's 'whatever it takes',2012-07-26,-43.0,2012-07-26 Draghi's 'whatever it takes' ; 2012-09-13 Fed announces QE3
+2012-10-09,Commodity-Macro,Calm / Low-Rate,16,False,1,Fed announces QE3,2012-09-13,-26.0,2012-09-13 Fed announces QE3
+2012-11-02,Calm / Low-Rate,Commodity-Macro,20,False,0,,,,
+2012-12-03,Commodity-Macro,Calm / Low-Rate,90,True,0,,,,
+2013-04-15,Calm / Low-Rate,Commodity-Macro,67,False,0,,,,
+2013-07-19,Commodity-Macro,Safe-Haven,21,False,0,,,,
+2013-08-19,Safe-Haven,Calm / Low-Rate,22,False,0,,,,
+2013-09-19,Calm / Low-Rate,Safe-Haven,40,False,0,,,,
+2013-11-14,Safe-Haven,Calm / Low-Rate,19,False,0,,,,
+2013-12-12,Calm / Low-Rate,Safe-Haven,27,False,0,,,,
+2014-01-23,Safe-Haven,Calm / Low-Rate,228,True,0,,,,
+2014-12-17,Calm / Low-Rate,Safe-Haven,53,False,1,OPEC declines to cut output,2014-11-27,-20.0,2014-11-27 OPEC declines to cut output
+2015-03-06,Safe-Haven,Calm / Low-Rate,23,False,0,,,,
+2015-04-09,Calm / Low-Rate,Safe-Haven,28,False,0,,,,
+2015-05-19,Safe-Haven,Calm / Low-Rate,67,False,0,,,,
+2015-08-24,Calm / Low-Rate,Safe-Haven,27,False,1,China devalues the yuan,2015-08-11,-13.0,2015-08-11 China devalues the yuan
+2015-10-01,Safe-Haven,Calm / Low-Rate,29,False,0,,,,
+2015-11-11,Calm / Low-Rate,Safe-Haven,10,False,0,,,,
+2015-11-25,Safe-Haven,Calm / Low-Rate,28,False,0,,,,
+2016-01-07,Calm / Low-Rate,Safe-Haven,50,False,1,Fed 'liftoff',2015-12-16,-22.0,2015-12-16 Fed 'liftoff'
+2016-03-21,Safe-Haven,Calm / Low-Rate,67,False,0,,,,
+2016-06-24,Calm / Low-Rate,Safe-Haven,22,False,1,Brexit referendum result,2016-06-24,0.0,2016-06-24 Brexit referendum result
+2016-07-27,Safe-Haven,Calm / Low-Rate,86,False,1,Brexit referendum result,2016-06-24,-33.0,2016-06-24 Brexit referendum result
+2016-11-30,Calm / Low-Rate,Safe-Haven,20,False,1,Trump wins the US presidency,2016-11-08,-22.0,2016-11-08 Trump wins the US presidency
+2016-12-29,Safe-Haven,Calm / Low-Rate,500,True,0,,,,
+2018-12-26,Calm / Low-Rate,Safe-Haven,20,False,1,Fed hikes into a falling market,2018-12-19,-7.0,2018-12-19 Fed hikes into a falling market
+2019-01-25,Safe-Haven,Calm / Low-Rate,161,True,1,Fed hikes into a falling market,2018-12-19,-37.0,2018-12-19 Fed hikes into a falling market
+2019-09-16,Calm / Low-Rate,Safe-Haven,20,False,1,Attack on Saudi Abqaiq oil facility,2019-09-14,-2.0,2019-09-14 Attack on Saudi Abqaiq oil facility
+2019-10-14,Safe-Haven,Calm / Low-Rate,100,True,1,Attack on Saudi Abqaiq oil facility,2019-09-14,-30.0,2019-09-14 Attack on Saudi Abqaiq oil facility
+2020-03-09,Calm / Low-Rate,Crisis,59,True,2,OPEC+ breaks down; Saudi-Russia price war,2020-03-08,-1.0,2020-03-08 OPEC+ breaks down; Saudi-Russia price war ; 2020-03-11 WHO declares COVID-19 a pandemic
+2020-06-03,Crisis,Safe-Haven,26,True,1,WTI futures settle negative,2020-04-20,-44.0,2020-04-20 WTI futures settle negative
+2020-07-10,Safe-Haven,Calm / Low-Rate,13,False,0,,,,
+2020-07-29,Calm / Low-Rate,Commodity-Macro,28,False,1,,,,"2020-08-06 Gold sets a new record above $2,000"
+2020-09-08,Commodity-Macro,Calm / Low-Rate,44,False,1,"Gold sets a new record above $2,000",2020-08-06,-33.0,"2020-08-06 Gold sets a new record above $2,000"
+2020-11-09,Calm / Low-Rate,Safe-Haven,29,False,0,,,,
+2020-12-21,Safe-Haven,Calm / Low-Rate,12,False,0,,,,
+2021-01-08,Calm / Low-Rate,Safe-Haven,20,False,0,,,,
+2021-02-08,Safe-Haven,Calm / Low-Rate,90,True,0,,,,
+2021-06-17,Calm / Low-Rate,Commodity-Macro,18,False,0,,,,
+2021-07-14,Commodity-Macro,Calm / Low-Rate,95,True,0,,,,
+2021-11-26,Calm / Low-Rate,Safe-Haven,20,False,1,Fed announces the taper,2021-11-03,-23.0,2021-11-03 Fed announces the taper
+2021-12-27,Safe-Haven,Calm / Low-Rate,42,False,0,,,,
+2022-02-25,Calm / Low-Rate,Safe-Haven,63,False,1,Russia invades Ukraine,2022-02-24,-1.0,2022-02-24 Russia invades Ukraine
+2022-05-26,Safe-Haven,Calm / Low-Rate,100,True,0,,,,
+2022-10-19,Calm / Low-Rate,High-Yield,32,False,1,UK 'mini-budget' gilt crisis,2022-09-23,-26.0,2022-09-23 UK 'mini-budget' gilt crisis
+2022-12-05,High-Yield,Calm / Low-Rate,11,False,0,,,,
+2022-12-20,Calm / Low-Rate,High-Yield,28,False,0,,,,
+2023-02-01,High-Yield,Calm / Low-Rate,13,False,0,,,,
+2023-02-21,Calm / Low-Rate,High-Yield,22,False,0,,,,
+2023-03-23,High-Yield,Safe-Haven,19,False,1,Silicon Valley Bank fails,2023-03-10,-13.0,2023-03-10 Silicon Valley Bank fails
+2023-04-20,Safe-Haven,High-Yield,347,True,1,Silicon Valley Bank fails,2023-03-10,-41.0,2023-03-10 Silicon Valley Bank fails
+2024-09-06,High-Yield,Calm / Low-Rate,16,False,0,,,,
+2024-09-30,Calm / Low-Rate,High-Yield,181,True,1,Fed starts cutting (50bp),2024-09-18,-12.0,2024-09-18 Fed starts cutting (50bp)
+2025-06-23,High-Yield,Safe-Haven,15,False,0,,,,
+2025-07-15,Safe-Haven,High-Yield,69,False,0,,,,
+2025-10-21,High-Yield,Crisis,20,True,1,Gold sells off from record highs,2025-10-17,-4.0,2025-10-17 Gold sells off from record highs
+2025-11-18,Crisis,High-Yield,49,True,1,Gold sells off from record highs,2025-10-17,-32.0,2025-10-17 Gold sells off from record highs
+2026-01-30,High-Yield,Crisis,139,True,2,Gold's worst crash since the 1980s,2026-01-29,-1.0,"2026-01-26 Gold breaks $5,000/oz for the first time ; 2026-01-29 Gold's worst crash since the 1980s"
+2026-08-20,Crisis,High-Yield,12,True,1,Iran conflict reignites,2026-07-08,-43.0,2026-07-08 Iran conflict reignites
