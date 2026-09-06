@@ -1,0 +1,52 @@
+date,category,event,detail,source
+2004-06-30,monetary-policy,Fed starts 2004-06 hiking cycle,"Fed funds lifted from 1.00%; 17 consecutive 25bp hikes to 5.25% by mid-2006.",https://www.federalreserve.gov/monetarypolicy/openmarket.htm
+2005-07-21,geopolitical,China drops the yuan's dollar peg,"PBoC revalues the yuan ~2% and moves to a managed float; dollar-bloc repricing.",https://en.wikipedia.org/wiki/Chinese_yuan#2005_revaluation
+2007-02-27,financial-crisis,Shanghai selloff / global mini-crash,"Shanghai Composite -9% triggers a worldwide equity drop; first tremor of the credit cycle.",https://en.wikipedia.org/wiki/Chinese_stock_bubble_of_2007
+2007-08-09,financial-crisis,BNP Paribas freezes three funds,"Bank halts redemptions citing an inability to value subprime paper; money markets seize.",https://www.reuters.com/article/idUSL09664154
+2007-09-18,monetary-policy,Fed's first cut of the crisis,"FOMC cuts 50bp to 4.75% as the credit crunch spreads.",https://www.federalreserve.gov/newsevents/pressreleases/monetary20070918a.htm
+2008-03-16,financial-crisis,Bear Stearns rescue,"JPMorgan buys Bear Stearns with Fed backstop; first systemic domino.",https://en.wikipedia.org/wiki/Bear_Stearns
+2008-07-11,commodity,Crude oil peaks near $147,"WTI hits its all-time intraday high before collapsing into year-end.",https://en.wikipedia.org/wiki/2000s_energy_crisis
+2008-09-15,financial-crisis,Lehman Brothers files for bankruptcy,"Largest bankruptcy in US history; global funding markets freeze, flight to safety.",https://en.wikipedia.org/wiki/Bankruptcy_of_Lehman_Brothers
+2008-10-03,fiscal-trade,TARP signed into law,"$700bn US bank-rescue package enacted amid the panic.",https://en.wikipedia.org/wiki/Troubled_Asset_Relief_Program
+2008-11-25,monetary-policy,Fed announces QE1,"Fed begins large-scale asset purchases (initially agency MBS).",https://www.federalreserve.gov/newsevents/pressreleases/monetary20081125b.htm
+2009-03-09,financial-crisis,US equity market bottoms,"S&P 500 closes at 676, the post-crisis low; risk assets begin a multi-year rally.",https://en.wikipedia.org/wiki/2008_financial_crisis
+2009-03-18,monetary-policy,Fed expands QE1 to Treasuries,"FOMC adds $300bn of long-term Treasury buying; dollar drops, gold jumps.",https://www.federalreserve.gov/newsevents/pressreleases/monetary20090318a.htm
+2010-05-02,financial-crisis,First Greek bailout,"EU/IMF EUR110bn package; start of the euro-area sovereign debt crisis.",https://en.wikipedia.org/wiki/First_Economic_Adjustment_Programme_for_Greece
+2010-11-03,monetary-policy,Fed announces QE2,"$600bn Treasury purchase program; weak dollar, commodity reflation.",https://www.federalreserve.gov/newsevents/pressreleases/monetary20101103a.htm
+2011-08-05,financial-crisis,S&P downgrades US credit rating,"First-ever downgrade of US sovereign debt to AA+ after the debt-ceiling standoff.",https://en.wikipedia.org/wiki/United_States_federal_government_credit-rating_downgrades
+2011-09-06,commodity,Gold hits its 2011 record,"Spot gold peaks near $1,920/oz at the height of the euro crisis and US downgrade.",https://en.wikipedia.org/wiki/Gold_as_an_investment
+2011-09-21,monetary-policy,Fed launches Operation Twist,"Fed lengthens the maturity of its portfolio to push down long-term yields.",https://www.federalreserve.gov/newsevents/pressreleases/monetary20110921a.htm
+2012-07-26,monetary-policy,Draghi's 'whatever it takes',"ECB president pledges to preserve the euro; euro-crisis risk premium collapses.",https://www.ecb.europa.eu/press/key/date/2012/html/sp120726.en.html
+2012-09-13,monetary-policy,Fed announces QE3,"Open-ended $40bn/month MBS purchases ('QE-infinity').",https://www.federalreserve.gov/newsevents/pressreleases/monetary20120913a.htm
+2013-05-22,monetary-policy,Taper tantrum begins,"Bernanke hints at slowing QE; Treasury yields spike, EM and gold sell off.",https://en.wikipedia.org/wiki/Taper_tantrum
+2014-10-29,monetary-policy,Fed ends QE3,"FOMC concludes asset purchases; balance sheet held steady.",https://www.federalreserve.gov/newsevents/pressreleases/monetary20141029a.htm
+2014-11-27,commodity,OPEC declines to cut output,"OPEC holds production into a supply glut; WTI falls from ~$75 toward $26 by early 2016.",https://en.wikipedia.org/wiki/2010s_oil_glut
+2015-08-11,geopolitical,China devalues the yuan,"Surprise ~2% CNY devaluation triggers a global risk-off wave into late August.",https://en.wikipedia.org/wiki/2015%E2%80%9316_Chinese_stock_market_turbulence
+2015-12-16,monetary-policy,Fed 'liftoff',"First rate hike since 2006 (to 0.25-0.50%); the ZIRP era formally ends.",https://www.federalreserve.gov/newsevents/pressreleases/monetary20151216a.htm
+2016-01-20,commodity,Crude oil bottoms near $26,"WTI hits its cycle low as the shale glut peaks.",https://en.wikipedia.org/wiki/2010s_oil_glut
+2016-06-24,geopolitical,Brexit referendum result,"UK votes to leave the EU; sterling crashes, gold and Treasuries rally.",https://en.wikipedia.org/wiki/2016_United_Kingdom_European_Union_membership_referendum
+2016-11-08,election,Trump wins the US presidency,"'Reflation trade': yields and the dollar spike, gold falls into year-end.",https://en.wikipedia.org/wiki/2016_United_States_presidential_election
+2018-12-19,monetary-policy,Fed hikes into a falling market,"Fourth 2018 hike despite a sharp Q4 selloff; policy-error fears, volatility spike.",https://www.federalreserve.gov/newsevents/pressreleases/monetary20181219a.htm
+2019-07-31,monetary-policy,Fed's 'mid-cycle adjustment',"First cut since 2008 (25bp) as trade-war growth fears mount.",https://www.federalreserve.gov/newsevents/pressreleases/monetary20190731a.htm
+2019-09-14,geopolitical,Attack on Saudi Abqaiq oil facility,"Drone/missile strike knocks out ~5% of world supply; oil posts its biggest one-day jump on record.",https://en.wikipedia.org/wiki/Abqaiq%E2%80%93Khurais_attack
+2020-03-08,commodity,OPEC+ breaks down; Saudi-Russia price war,"Saudi Arabia slashes prices and lifts output; WTI drops ~25% on 9 March.",https://en.wikipedia.org/wiki/2020_Russia%E2%80%93Saudi_Arabia_oil_price_war
+2020-03-11,financial-crisis,WHO declares COVID-19 a pandemic,"Global lockdowns; fastest bear market in history, cross-asset liquidation.",https://en.wikipedia.org/wiki/COVID-19_pandemic
+2020-03-23,monetary-policy,Fed goes to unlimited QE,"Open-ended purchases plus credit facilities; US equities bottom the same day.",https://www.federalreserve.gov/newsevents/pressreleases/monetary20200323b.htm
+2020-04-20,commodity,WTI futures settle negative,"May WTI settles at -$37.63 as storage runs out at contract expiry.",https://en.wikipedia.org/wiki/2020_Russia%E2%80%93Saudi_Arabia_oil_price_war
+2020-08-06,commodity,"Gold sets a new record above $2,000","Real yields deeply negative post-COVID; gold peaks near $2,075.",https://en.wikipedia.org/wiki/Gold_as_an_investment
+2021-11-03,monetary-policy,Fed announces the taper,"FOMC starts winding down pandemic QE as inflation runs hot.",https://www.federalreserve.gov/newsevents/pressreleases/monetary20211103a.htm
+2022-02-24,geopolitical,Russia invades Ukraine,"Energy and commodity shock; gold and oil spike, risk-off across markets.",https://en.wikipedia.org/wiki/Russian_invasion_of_Ukraine
+2022-03-08,commodity,Commodities spike on the Ukraine war,"Brent briefly tops $130; broad commodity surge and a nickel-market blowup.",https://en.wikipedia.org/wiki/2022_Russian_invasion_of_Ukraine
+2022-03-16,monetary-policy,Fed starts its 2022 hiking cycle,"First of a run of hikes (including four 75bp moves) to fight 9% inflation.",https://www.federalreserve.gov/newsevents/pressreleases/monetary20220316a.htm
+2022-09-23,financial-crisis,UK 'mini-budget' gilt crisis,"Unfunded tax cuts crater gilts and sterling; the BoE intervenes to stop an LDI spiral.",https://en.wikipedia.org/wiki/September_2022_United_Kingdom_mini-budget
+2023-03-10,financial-crisis,Silicon Valley Bank fails,"Largest bank failure since 2008; regional-bank stress, a dash to Treasuries and gold.",https://en.wikipedia.org/wiki/Collapse_of_Silicon_Valley_Bank
+2023-10-19,monetary-policy,US 10-year yield tops 5%,"Long-end yields hit their highest since 2007 on 'higher for longer' and heavy supply.",https://www.reuters.com/markets/us/us-10-year-treasury-yield-hits-5-first-time-since-2007-2023-10-19/
+2024-09-18,monetary-policy,Fed starts cutting (50bp),"First cut of the easing cycle as inflation cools toward target.",https://www.federalreserve.gov/newsevents/pressreleases/monetary20240918a.htm
+2025-04-02,fiscal-trade,'Liberation Day' reciprocal tariffs,"Sweeping US tariffs announced; the total US stock market falls ~12% into 9 April, oil slides.",https://en.wikipedia.org/wiki/Liberation_Day_tariffs
+2025-04-09,fiscal-trade,90-day tariff pause,"Country-specific tariffs paused (10% baseline kept); sharp equity rebound.",https://en.wikipedia.org/wiki/Liberation_Day_tariffs
+2025-10-17,commodity,Gold sells off from record highs,"Gold drops >2% on easing US-China trade tension, a firmer dollar and rotation out of the trade.",https://www.cruxinvestor.com/posts/why-gold-and-silver-suddenly-sold-off-and-what-it-means-for-investors-public-companies
+2026-01-26,commodity,"Gold breaks $5,000/oz for the first time","Parabolic run on record central-bank buying and tariff-driven safe-haven demand.",https://bulliontradingllc.com/blog/gold-price-5000-record-high-2026-drivers/
+2026-01-29,commodity,Gold's worst crash since the 1980s,"Gold falls ~11% from its record in days (silver >30%); the blow-off top reverses hard.",https://bulliontradingllc.com/blog/gold-and-silver-price-crash-january-2026/
+2026-02-28,geopolitical,US and Israel begin strikes on Iran,"Iran closes the Strait of Hormuz; ~20% of world oil transit halts, crude spikes from ~$60 toward ~$115.",https://www.britannica.com/event/2026-Iran-war
+2026-05-07,geopolitical,Further US strikes on Iran,"Renewed strikes keep the Hormuz shipping disruption and the oil risk premium in place.",https://en.wikipedia.org/wiki/7_May_2026_United_States_strikes_on_Iran
+2026-07-08,geopolitical,Iran conflict reignites,"Conflict resumes after a spring ceasefire; Iranian forces attack Gulf shipping, oil jumps again.",https://www.aljazeera.com/news/2026/7/8/oil-prices-surge-as-us-strikes-iran-reversing-fall-to-pre-war-levels

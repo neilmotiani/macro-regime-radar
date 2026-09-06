@@ -27,5 +27,8 @@ src/demo.py
 data/*.csv
 !data/samples/*.csv
 
+# ...but events.csv is hand-curated, not regenerable - track it.
+!data/events.csv
+
 # Generated figures - regenerable by re-running the scripts.
 figures/

@@ -6,21 +6,16 @@ Run from inside src/:
     ../venv/bin/python -m streamlit run dashboard.py
 """
 
-import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 from plotly.subplots import make_subplots
 
+from regime_labels import MIN_REGIME_RUN, smooth_regimes
+
 st.set_page_config(page_title="Macro Regime Radar", layout="wide")
 st.title("Macro Regime Radar")
-
-# The GMM labels each day independently, so the regime can flip for a day
-# or two around a transition and then flip straight back. Those blips
-# aren't real regime changes. We absorb any episode shorter than this many
-# trading days into its longer neighbour before displaying anything.
-MIN_REGIME_RUN = 10  # ~two trading weeks
 
 # --- Regime display styles -------------------------------------------------
 #
@@ -39,41 +34,6 @@ REGIME_STYLE = {
 
 
 # --- Data loading --------------------------------------------------------
-
-
-def smooth_regimes(regime: pd.Series, min_run: int) -> pd.Series:
-    """Absorb regime episodes shorter than `min_run` days into a neighbour.
-
-    Run-length-encode the label sequence; repeatedly take the shortest run
-    that is still below the threshold and overwrite it with whichever
-    adjacent run is *longer*. Merging shortest-first, into the longer side,
-    keeps the result stable and stops it from snowballing toward one
-    regime. Each pass strictly reduces the number of runs, so it
-    terminates. NaN warm-up rows are left untouched.
-    """
-    valid = regime.dropna()
-    vals = valid.to_numpy().astype(int)
-
-    while True:
-        change = np.flatnonzero(np.diff(vals)) + 1
-        starts = np.concatenate([[0], change])
-        ends = np.concatenate([change, [len(vals)]])
-        lengths = ends - starts
-
-        shortest = next(
-            (i for i in np.argsort(lengths) if lengths[i] < min_run), None
-        )
-        if shortest is None:
-            break
-
-        left_len = lengths[shortest - 1] if shortest > 0 else -1
-        right_len = lengths[shortest + 1] if shortest < len(lengths) - 1 else -1
-        source = shortest - 1 if left_len >= right_len else shortest + 1
-        vals[starts[shortest]:ends[shortest]] = vals[starts[source]]
-
-    out = regime.copy()
-    out.loc[valid.index] = vals
-    return out
 
 
 @st.cache_data
